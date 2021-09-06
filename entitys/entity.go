@@ -1,9 +1,13 @@
 package entitys
 
 import (
+	imageutils "bhell/imageUtils"
+
 	"github.com/faiface/pixel"
 	"github.com/faiface/pixel/pixelgl"
 )
+
+var PlayerFiredBullet = make([]*Bullet, 0)
 
 type Entity struct {
 	Sprite *pixel.Sprite
@@ -14,12 +18,49 @@ type Entity struct {
 
 type Bullet struct {
 	Entity
+	Life    int
+	MaxLife int
+}
+
+func (bullet *Bullet) Tick(dt float64) {
+	bullet.Pos.Y += bullet.Speed * dt
+	bullet.Life++
+	if bullet.Life >= bullet.MaxLife {
+		for i, v := range PlayerFiredBullet {
+			if v == bullet {
+				s := append(PlayerFiredBullet[:i], PlayerFiredBullet[i+1:]...)
+				PlayerFiredBullet = s
+			}
+		}
+	}
 }
 
 type Player struct {
 	Entity
 	Moving bool
-	Firing bool
+}
+
+func (player *Player) FireHandler(win *pixelgl.Window, dt float64) {
+	bulletSprite, err := imageutils.LoadPicture("assets/bullet.png")
+	if err != nil {
+		panic(err)
+	}
+
+	bulletPos := player.Pos
+	newPos := pixel.V(0, 10)
+	bulletPos = bulletPos.Add(newPos)
+
+	bullet := Bullet{
+		Entity: Entity{
+			Sprite: bulletSprite,
+			Pos:    bulletPos,
+			Speed:  200.0,
+			Size:   bulletSprite.Picture().Bounds(),
+		},
+		Life:    0,
+		MaxLife: 200,
+	}
+	PlayerFiredBullet = append(PlayerFiredBullet, &bullet)
 }
 
 func (player *Player) MovementHandler(win *pixelgl.Window, dt float64) {

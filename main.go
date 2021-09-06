@@ -36,18 +36,29 @@ func run() {
 			Size:   playerSprite.Picture().Bounds(),
 		},
 		Moving: false,
-		Firing: false,
 	}
 
 	last := time.Now()
+	count := time.Now().Add(time.Millisecond * 100)
 
 	for !win.Closed() {
 		dt := time.Since(last).Seconds()
 		last = time.Now()
 
+		if win.Pressed(pixelgl.MouseButton1) {
+			if last.UnixMilli() >= count.UnixMilli() {
+				count = time.Now().Add(time.Millisecond * 100)
+				player.FireHandler(win, dt)
+			}
+		}
 		player.MovementHandler(win, dt)
 
 		win.Clear(colornames.Black)
+		for _, v := range entitys.PlayerFiredBullet {
+			v.Sprite.Draw(win, pixel.IM.Moved(v.Pos))
+			v.Tick(dt)
+		}
+
 		player.Sprite.Draw(win, pixel.IM.Moved(player.Pos))
 		win.Update()
 		player.Moving = false
