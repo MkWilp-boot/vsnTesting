@@ -42,9 +42,19 @@ func run() {
 		dt := time.Since(last).Seconds()
 		last = time.Now()
 
+		// Player UP and Down
 		if win.Pressed(pixelgl.KeyW) {
 			player.Pos.Y += player.Speed * float64(dt)
+		} else if win.Pressed(pixelgl.KeyS) {
+			player.Pos.Y -= player.Speed * float64(dt)
 		}
+		//Player Left and Right
+		if win.Pressed(pixelgl.KeyA) {
+			player.Pos.X -= player.Speed * float64(dt)
+		} else if win.Pressed(pixelgl.KeyD) {
+			player.Pos.X += player.Speed * float64(dt)
+		}
+
 		win.Clear(colornames.Black)
 		player.Sprite.Draw(win, pixel.IM.Moved(player.Pos))
 		win.Update()
