@@ -11,11 +11,11 @@ import (
 )
 
 func run() {
-
 	cfg := pixelgl.WindowConfig{
-		Title:  "BHELL",
-		Bounds: pixel.R(0, 0, 600, 650),
-		VSync:  true,
+		Title:     "BHELL",
+		Bounds:    pixel.R(0, 0, 600, 650),
+		Resizable: false,
+		Maximized: true,
 	}
 
 	win, err := pixelgl.NewWindow(cfg)
@@ -32,7 +32,7 @@ func run() {
 		Entity: entitys.Entity{
 			Sprite: playerSprite,
 			Pos:    win.Bounds().Center(),
-			Speed:  100.0,
+			Speed:  200.0,
 			Size:   playerSprite.Picture().Bounds(),
 		},
 		Moving: false,
@@ -41,6 +41,7 @@ func run() {
 	last := time.Now()
 	count := time.Now().Add(time.Millisecond * 100)
 
+	// main loop
 	for !win.Closed() {
 		dt := time.Since(last).Seconds()
 		last = time.Now()
@@ -51,17 +52,21 @@ func run() {
 				player.FireHandler(win, dt)
 			}
 		}
-		player.MovementHandler(win, dt)
 
+		player.MovementHandler(win, dt)
 		win.Clear(colornames.Black)
-		for _, v := range entitys.PlayerFiredBullet {
-			v.Sprite.Draw(win, pixel.IM.Moved(v.Pos))
-			v.Tick(dt)
-		}
+		updateBullets(win, dt)
 
 		player.Sprite.Draw(win, pixel.IM.Moved(player.Pos))
-		win.Update()
 		player.Moving = false
+		win.Update()
+	}
+}
+
+func updateBullets(win *pixelgl.Window, dt float64) {
+	for _, v := range entitys.PlayerFiredBullet {
+		v.Sprite.Draw(win, pixel.IM.Moved(v.Pos))
+		v.Tick(dt)
 	}
 }
 

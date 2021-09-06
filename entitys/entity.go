@@ -54,11 +54,11 @@ func (player *Player) FireHandler(win *pixelgl.Window, dt float64) {
 		Entity: Entity{
 			Sprite: bulletSprite,
 			Pos:    bulletPos,
-			Speed:  200.0,
+			Speed:  500.0,
 			Size:   bulletSprite.Picture().Bounds(),
 		},
 		Life:    0,
-		MaxLife: 200,
+		MaxLife: 600,
 	}
 	PlayerFiredBullet = append(PlayerFiredBullet, &bullet)
 }
