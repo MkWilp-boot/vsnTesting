@@ -2,6 +2,7 @@ package entitys
 
 import (
 	imageutils "bhell/imageUtils"
+	"log"
 
 	"github.com/faiface/pixel"
 	"github.com/faiface/pixel/pixelgl"
@@ -16,20 +17,25 @@ type Entity struct {
 	Size   pixel.Rect
 }
 
+type Enemy struct {
+	Entity
+}
+
 type Bullet struct {
 	Entity
 	Life    int
 	MaxLife int
 }
 
-func (bullet *Bullet) Tick(dt float64) {
+func (bullet *Bullet) Tick(win *pixelgl.Window, dt float64) {
 	bullet.Pos.Y += bullet.Speed * dt
-	bullet.Life++
-	if bullet.Life >= bullet.MaxLife {
+
+	if bullet.Pos.Y >= win.Bounds().Max.Y {
 		for i, v := range PlayerFiredBullet {
 			if v == bullet {
 				s := append(PlayerFiredBullet[:i], PlayerFiredBullet[i+1:]...)
 				PlayerFiredBullet = s
+				log.Println("removido")
 			}
 		}
 	}

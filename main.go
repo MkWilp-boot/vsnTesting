@@ -66,7 +66,7 @@ func run() {
 func updateBullets(win *pixelgl.Window, dt float64) {
 	for _, v := range entitys.PlayerFiredBullet {
 		v.Sprite.Draw(win, pixel.IM.Moved(v.Pos))
-		v.Tick(dt)
+		v.Tick(win, dt)
 	}
 }
 
