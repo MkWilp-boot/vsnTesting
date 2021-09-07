@@ -2,6 +2,7 @@ package entitys
 
 import (
 	imageutils "bhell/imageUtils"
+	"fmt"
 	"log"
 
 	"github.com/faiface/pixel"
@@ -15,6 +16,23 @@ type Entity struct {
 	Pos    pixel.Vec
 	Speed  float64
 	Size   pixel.Rect
+	Rect   pixel.Rect
+}
+
+func (en *Entity) CheckCollisionWithEntity(collider *Entity, dt float64) {
+	go func(en *Entity, collider *Entity, dt float64) {
+		enR := pixel.Rect{
+			Min: pixel.V(en.Pos.X-(en.Size.W()/2), en.Pos.Y-(en.Size.H()/2)),
+			Max: pixel.V(en.Pos.X+(en.Size.W()/2), en.Pos.Y+(en.Size.H()/2)),
+		}
+		coR := pixel.Rect{
+			Min: pixel.V(collider.Pos.X-(collider.Size.W()/2), collider.Pos.Y-(collider.Size.H()/2)),
+			Max: pixel.V(collider.Pos.X+(collider.Size.W()/2), collider.Pos.Y+(collider.Size.H()/2)),
+		}
+		if enR.Intersects(coR) {
+			fmt.Println("colidindo")
+		}
+	}(en, collider, dt)
 }
 
 type Enemy struct {
@@ -23,22 +41,21 @@ type Enemy struct {
 
 type Bullet struct {
 	Entity
-	Life    int
-	MaxLife int
 }
 
-func (bullet *Bullet) Tick(win *pixelgl.Window, dt float64) {
+func (bullet *Bullet) Tick(win *pixelgl.Window, dt float64) *Bullet {
 	bullet.Pos.Y += bullet.Speed * dt
-
 	if bullet.Pos.Y >= win.Bounds().Max.Y {
-		for i, v := range PlayerFiredBullet {
-			if v == bullet {
-				s := append(PlayerFiredBullet[:i], PlayerFiredBullet[i+1:]...)
-				PlayerFiredBullet = s
-				log.Println("removido")
+		go func() {
+			for index, value := range PlayerFiredBullet {
+				if value == bullet {
+					PlayerFiredBullet = append(PlayerFiredBullet[:index], PlayerFiredBullet[index+1:]...)
+					log.Println("PLAYER_BULLET_REMOVED")
+				}
 			}
-		}
+		}()
 	}
+	return bullet
 }
 
 type Player struct {
@@ -63,8 +80,10 @@ func (player *Player) FireHandler(win *pixelgl.Window, dt float64) {
 			Speed:  500.0,
 			Size:   bulletSprite.Picture().Bounds(),
 		},
-		Life:    0,
-		MaxLife: 600,
+	}
+	bullet.Rect = pixel.Rect{
+		Min: pixel.V(bullet.Pos.X-(bullet.Size.W()/2), bullet.Pos.Y-(bullet.Size.H()/2)),
+		Max: pixel.V(bullet.Pos.X+(bullet.Size.W()/2), bullet.Pos.Y+(bullet.Size.H()/2)),
 	}
 	PlayerFiredBullet = append(PlayerFiredBullet, &bullet)
 }

@@ -10,12 +10,14 @@ import (
 	"golang.org/x/exp/shiny/materialdesign/colornames"
 )
 
+var Boss entitys.Enemy
+
 func run() {
 	cfg := pixelgl.WindowConfig{
 		Title:     "BHELL",
 		Bounds:    pixel.R(0, 0, 600, 650),
 		Resizable: false,
-		Maximized: true,
+		//Maximized: true,
 	}
 
 	win, err := pixelgl.NewWindow(cfg)
@@ -31,11 +33,25 @@ func run() {
 	player := entitys.Player{
 		Entity: entitys.Entity{
 			Sprite: playerSprite,
-			Pos:    win.Bounds().Center(),
+			Pos:    win.Bounds().Center().Sub(pixel.V(0, 150)),
 			Speed:  200.0,
 			Size:   playerSprite.Picture().Bounds(),
 		},
 		Moving: false,
+	}
+
+	// creating the player
+	bossprite, err := imageutils.LoadPicture("assets/enemy.png")
+	if err != nil {
+		panic(err)
+	}
+	Boss = entitys.Enemy{
+		Entity: entitys.Entity{
+			Sprite: bossprite,
+			Pos:    win.Bounds().Center().Add(pixel.V(0, 150)),
+			Speed:  0,
+			Size:   bossprite.Picture().Bounds(),
+		},
 	}
 
 	last := time.Now()
@@ -58,6 +74,7 @@ func run() {
 		updateBullets(win, dt)
 
 		player.Sprite.Draw(win, pixel.IM.Moved(player.Pos))
+		Boss.Sprite.Draw(win, pixel.IM.Moved(Boss.Pos))
 		player.Moving = false
 		win.Update()
 	}
@@ -66,7 +83,7 @@ func run() {
 func updateBullets(win *pixelgl.Window, dt float64) {
 	for _, v := range entitys.PlayerFiredBullet {
 		v.Sprite.Draw(win, pixel.IM.Moved(v.Pos))
-		v.Tick(win, dt)
+		v.Tick(win, dt).CheckCollisionWithEntity(&Boss.Entity, dt)
 	}
 }
 
