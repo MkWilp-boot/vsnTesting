@@ -2,8 +2,6 @@ package entitys
 
 import (
 	imageutils "bhell/imageUtils"
-	"fmt"
-	"log"
 
 	"github.com/faiface/pixel"
 	"github.com/faiface/pixel/pixelgl"
@@ -17,22 +15,7 @@ type Entity struct {
 	Speed  float64
 	Size   pixel.Rect
 	Rect   pixel.Rect
-}
-
-func (en *Entity) CheckCollisionWithEntity(collider *Entity, dt float64) {
-	go func(en *Entity, collider *Entity, dt float64) {
-		enR := pixel.Rect{
-			Min: pixel.V(en.Pos.X-(en.Size.W()/2), en.Pos.Y-(en.Size.H()/2)),
-			Max: pixel.V(en.Pos.X+(en.Size.W()/2), en.Pos.Y+(en.Size.H()/2)),
-		}
-		coR := pixel.Rect{
-			Min: pixel.V(collider.Pos.X-(collider.Size.W()/2), collider.Pos.Y-(collider.Size.H()/2)),
-			Max: pixel.V(collider.Pos.X+(collider.Size.W()/2), collider.Pos.Y+(collider.Size.H()/2)),
-		}
-		if enR.Intersects(coR) {
-			fmt.Println("colidindo")
-		}
-	}(en, collider, dt)
+	Life   int
 }
 
 type Enemy struct {
@@ -43,17 +26,35 @@ type Bullet struct {
 	Entity
 }
 
+func (bullet *Bullet) CheckCollisionWithEntity(enemy *Enemy, dt float64) {
+	go func(bullet *Bullet, enemy *Enemy, dt float64) {
+		enR := pixel.Rect{
+			Min: pixel.V(bullet.Pos.X-(bullet.Size.W()/2), bullet.Pos.Y-(bullet.Size.H()/2)),
+			Max: pixel.V(bullet.Pos.X+(bullet.Size.W()/2), bullet.Pos.Y+(bullet.Size.H()/2)),
+		}
+		coR := pixel.Rect{
+			Min: pixel.V(enemy.Pos.X-(enemy.Size.W()/2), enemy.Pos.Y-(enemy.Size.H()/2)),
+			Max: pixel.V(enemy.Pos.X+(enemy.Size.W()/2), enemy.Pos.Y+(enemy.Size.H()/2)),
+		}
+		if enR.Intersects(coR) {
+			enemy.Life = enemy.Life - 1
+			go removeBullet(bullet)
+		}
+	}(bullet, enemy, dt)
+}
+
+func removeBullet(bullet *Bullet) {
+	for index, value := range PlayerFiredBullet {
+		if value == bullet {
+			PlayerFiredBullet = append(PlayerFiredBullet[:index], PlayerFiredBullet[index+1:]...)
+		}
+	}
+}
+
 func (bullet *Bullet) Tick(win *pixelgl.Window, dt float64) *Bullet {
 	bullet.Pos.Y += bullet.Speed * dt
 	if bullet.Pos.Y >= win.Bounds().Max.Y {
-		go func() {
-			for index, value := range PlayerFiredBullet {
-				if value == bullet {
-					PlayerFiredBullet = append(PlayerFiredBullet[:index], PlayerFiredBullet[index+1:]...)
-					log.Println("PLAYER_BULLET_REMOVED")
-				}
-			}
-		}()
+		removeBullet(bullet)
 	}
 	return bullet
 }
